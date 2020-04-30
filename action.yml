@@ -1,0 +1,27 @@
+---
+name: Code review using Rails Best Practices
+author: Money Forward, Inc.
+description: Analyze code statically using Rails Best Practices in Github actions
+inputs:
+  files:
+    description: |
+      Specify files or directories
+
+      (Multiple files or directories can be specified by separating them with line feed)
+    required: false
+  options:
+    description: |
+      Changes `rails_best_practices` command line options.
+
+      Specify the options in JSON array format.
+      e.g.: '["--vendor", "--spec"]'
+    required: false
+  working_directory:
+    description: Changes the current working directory of the Node.js process
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+branding:
+  icon: 'search'
+  color: 'orange'
