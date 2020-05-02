@@ -4,10 +4,7 @@ author: Money Forward, Inc.
 description: Analyze code statically using Rails Best Practices in Github actions
 inputs:
   files:
-    description: |
-      Specify files or directories
-
-      (Multiple files or directories can be specified by separating them with line feed)
+    description: Changes the path to a Rails application
     required: false
   options:
     description: |

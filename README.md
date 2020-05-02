@@ -6,9 +6,7 @@ Analyze code statically by using [Rails Best Practices](https://github.com/flyer
 
 ### `files`
 
-Specify files or directories
-
-(Multiple files or directories can be specified by separating them with line feed)
+Changes the path to a Rails application
 
 ### `options`
 
