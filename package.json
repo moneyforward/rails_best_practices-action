@@ -1,6 +1,6 @@
 {
   "name": "rails_best_practices-action",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Analyze code statically using Rails Best Practices in Github actions",
   "main": "dist/index.js",
   "scripts": {
