@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import stream from 'stream';
-import { Transformers } from '@moneyforward/sca-action-core';
 import Analyzer, { Result } from '../src/analyzer'
 import { AssertionError } from 'assert';
 
@@ -26,7 +25,7 @@ describe('Transform', () => {
       public constructor() {
         super();
       }
-      public createTransformStreams(): Transformers {
+      public createTransformStreams(): stream.Transform[] {
         return super.createTransformStreams();
       }
     })();

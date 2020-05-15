@@ -16,6 +16,12 @@ inputs:
   working_directory:
     description: Changes the current working directory of the Node.js process
     required: false
+  reporter_type_notation:
+    description: |
+      Change the reporter.
+
+      (Multiple can be specified separated by commas)
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'

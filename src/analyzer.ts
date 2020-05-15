@@ -1,9 +1,12 @@
+import { ChildProcess, SpawnOptions } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import stream from 'stream';
 import util from 'util';
-import { Resolver, StaticCodeAnalyzer, Transformers, tool } from '@moneyforward/sca-action-core';
+import Command, { CommandConstructor, SpawnPrguments } from '@moneyforward/command';
+import { transform } from '@moneyforward/stream-util';
+import StaticCodeAnalyzer, { installer } from '@moneyforward/sca-action-core';
 
 const debug = util.debuglog('rails_best_practices-action');
 
@@ -16,51 +19,79 @@ export type Result = {
 export default class Analyzer extends StaticCodeAnalyzer {
   private static readonly command = 'rails_best_practices';
 
+  private static buildOutputFileOptions(): string[] {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), `${Analyzer.command}-`));
+    const file = path.join(directory, 'output.json');
+    return ['--output-file', file];
+  }
+
   constructor(options: string[] = []) {
     super(Analyzer.command, options.concat(['-f', 'json', '--silent']), undefined, 2, undefined, 'Rails Best Practices');
   }
 
-  protected async prepare(): Promise<unknown> {
-    return tool.installGem(true, Analyzer.command);
+  protected async prepare(): Promise<void> {
+    console.log(`::group::Installing gems...`);
+    try {
+      new installer.RubyGemsInstaller(true).execute(Analyzer.command);
+    } finally {
+      console.log(`::endgroup::`)
+    }
   }
 
-  protected createTransformStreams(): Transformers {
-    const buffers: Buffer[] = [];
-    const next = new stream.Transform({
-      readableObjectMode: true,
-      transform: function (buffer, _encoding, done): void {
-        buffers.push(buffer);
-        done();
-      },
-      flush: function (done): void {
-        const result: Result = JSON.parse(Buffer.concat(buffers).toString());
-        debug(`Detected %d problem(s).`, result.length);
-        for (const error of result) this.push({
-          file: error.filename,
-          line: error.line_number,
-          column: undefined,
-          severity: 'error',
-          message: error.message,
-          code: undefined
-        });
-        this.push(null);
-        done();
+  protected createTransformStreams(): stream.Transform[] {
+    return [
+      new transform.JSON(),
+      new stream.Transform({
+        objectMode: true,
+        transform: function (result: Result, encoding, done): void {
+          debug(`Detected %d problem(s).`, result.length);
+          for (const error of result) this.push({
+            file: error.filename,
+            line: error.line_number,
+            column: undefined,
+            severity: 'error',
+            message: error.message,
+            code: undefined
+          });
+          this.push(null);
+          done();
+        }
+      })
+    ];
+  }
+
+  protected get Command(): CommandConstructor {
+    return class <T> extends Command<T> {
+      constructor(
+        command: string,
+        args: readonly string[] = [],
+        options: SpawnOptions = {},
+        promisify?: (child: ChildProcess, ...spawnPrguments: SpawnPrguments) => Promise<T>,
+        exitStatusThreshold: number | ((exitStatus: number) => boolean) = 1,
+        argumentsSizeMargin = 0
+      ) {
+        super(command, args, options, promisify, exitStatusThreshold, argumentsSizeMargin + Analyzer.buildOutputFileOptions().map(Command.sizeOf).reduce((previous, current) => previous + current));
       }
-    });
-    return [new stream.PassThrough(), next];
+
+      protected async configureArguments(args: string[]): Promise<string[]> {
+        const [optionName, file] = Analyzer.buildOutputFileOptions();
+        await fs.promises.writeFile(file, '');
+        return this.args.concat(optionName, file, ...args);
+      }
+    }
   }
 
-  protected async execute(args: string[], changeRanges: Map<string, [number, number][]>, resolver: Resolver): Promise<number> {
-    const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'rails_best_practices-'));
-    const file = path.join(directory, 'output.json');
-    await fs.promises.writeFile(file, null);
-    const [prev, next = prev] = this.createTransformStreams();
-    const that = Object.assign({}, this, { createTransformStreams: () => [prev, next] });
-    const watcher = fs.watch(file).on('error', debug).once('change', (eventType, filename) => {
-      debug('%s %s', eventType, filename);
-      watcher.close();
-      fs.createReadStream(file).pipe(next);
+  protected pipeline(stdout: stream.Readable | null, writable: stream.Writable, ...[, args]: SpawnPrguments): Promise<[stream.Readable, ...stream.Writable[]]> {
+    const [optionName, file] = args.slice(this.args.length);
+    debug('%s %s', optionName, file);
+    const transformers: stream.Writable[] = this.createTransformStreams() || []
+    return new Promise((resolve, reject) => {
+      const watcher = fs.watch(file).on('error', reject).once('change', (eventType, filename) => {
+        const stat = fs.statSync(file);
+        debug('%s %s (%d bytes)', eventType, filename, stat.size);
+        watcher.close();
+        resolve([fs.createReadStream(file), ...transformers.concat(writable)]);
+      });
     });
-    return super.execute.call(that, ['--output-file', file].concat(args), changeRanges, resolver);
   }
 }
