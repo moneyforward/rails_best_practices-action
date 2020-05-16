@@ -27,7 +27,7 @@
   "homepage": "https://github.com/moneyforward/rails_best_practices-action#readme",
   "dependencies": {
     "@moneyforward/command": "0.0.6",
-    "@moneyforward/sca-action-core": "^0.1.8",
+    "@moneyforward/sca-action-core": "^0.1.9",
     "@moneyforward/stream-util": "0.0.2"
   },
   "devDependencies": {
