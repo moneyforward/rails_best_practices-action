@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import stream from 'stream';
-import Analyzer, { Result } from '../src/analyzer'
+import Analyzer, { Result } from '../src'
 import { AssertionError } from 'assert';
 
 describe('Transform', () => {
