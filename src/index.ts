@@ -6,7 +6,7 @@ import stream from 'stream';
 import util from 'util';
 import Command, { CommandConstructor, SpawnPrguments } from '@moneyforward/command';
 import { transform } from '@moneyforward/stream-util';
-import StaticCodeAnalyzer, { installer } from '@moneyforward/sca-action-core';
+import StaticCodeAnalyzer, { AnalyzerConstructorParameter, installer } from '@moneyforward/sca-action-core';
 
 const debug = util.debuglog('@moneyforward/code-review-action-rails_best_practices-plugin');
 
@@ -25,8 +25,8 @@ export default class Analyzer extends StaticCodeAnalyzer {
     return ['--output-file', file];
   }
 
-  constructor(options: string[] = []) {
-    super(Analyzer.command, options.concat(['-f', 'json', '--silent']), undefined, 2, undefined, 'Rails Best Practices');
+  constructor(...args: AnalyzerConstructorParameter[]) {
+    super(Analyzer.command, args.map(String).concat(['-f', 'json', '--silent']), undefined, 2, undefined, 'Rails Best Practices');
   }
 
   protected async prepare(): Promise<void> {
