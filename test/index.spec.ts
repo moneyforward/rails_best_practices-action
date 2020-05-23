@@ -1,7 +1,10 @@
 import { expect } from 'chai';
 import stream from 'stream';
+import { reporter } from '@moneyforward/code-review-action'
 import Analyzer, { Result } from '../src'
 import { AssertionError } from 'assert';
+
+type ReporterConstractor = reporter.ReporterConstructor;
 
 describe('Transform', () => {
   it('should return the problem object', async () => {
@@ -22,6 +25,9 @@ describe('Transform', () => {
     ];
     const text = JSON.stringify(result);
     const analyzer = new (class extends Analyzer {
+      get Reporter(): reporter.ReporterConstructor {
+        throw new Error("Method not implemented.");
+      }
       public constructor() {
         super();
       }

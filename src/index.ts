@@ -4,9 +4,12 @@ import os from 'os';
 import path from 'path';
 import stream from 'stream';
 import util from 'util';
+import { analyzer } from '@moneyforward/code-review-action';
 import Command, { CommandConstructor, SpawnPrguments } from '@moneyforward/command';
 import { transform } from '@moneyforward/stream-util';
-import StaticCodeAnalyzer, { AnalyzerConstructorParameter, installer } from '@moneyforward/sca-action-core';
+import StaticCodeAnalyzer, { installer } from '@moneyforward/sca-action-core';
+
+type AnalyzerConstructorParameter = analyzer.AnalyzerConstructorParameter;
 
 const debug = util.debuglog('@moneyforward/code-review-action-rails_best_practices-plugin');
 
@@ -16,7 +19,7 @@ export type Result = {
   message: string;
 }[];
 
-export default class Analyzer extends StaticCodeAnalyzer {
+export default abstract class Analyzer extends StaticCodeAnalyzer {
   private static readonly command = 'rails_best_practices';
 
   private static buildOutputFileOptions(): string[] {
