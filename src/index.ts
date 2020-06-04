@@ -69,11 +69,18 @@ export default abstract class Analyzer extends StaticCodeAnalyzer {
         command: string,
         args: readonly string[] = [],
         options: SpawnOptions = {},
-        promisify?: (child: ChildProcess, ...spawnPrguments: SpawnPrguments) => Promise<T>,
+        iterate?: (child: ChildProcess, ...spawnPrguments: SpawnPrguments) => Iterable<T> | AsyncIterable<T>,
         exitStatusThreshold: number | ((exitStatus: number) => boolean) = 1,
         argumentsSizeMargin = 0
       ) {
-        super(command, args, options, promisify, exitStatusThreshold, argumentsSizeMargin + Analyzer.buildOutputFileOptions().map(Command.sizeOf).reduce((previous, current) => previous + current));
+        super(
+          command,
+          args,
+          options,
+          iterate,
+          exitStatusThreshold,
+          argumentsSizeMargin + Analyzer.buildOutputFileOptions().map(Command.sizeOf).reduce((previous, current) => previous + current)
+        );
       }
 
       protected async configureArguments(args: string[]): Promise<string[]> {
