@@ -1,6 +1,6 @@
 {
   "name": "@moneyforward/code-review-action-rails_best_practices-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Analyze code statically using Rails Best Practices in Github actions",
   "main": "dist/main/index.js",
   "scripts": {
